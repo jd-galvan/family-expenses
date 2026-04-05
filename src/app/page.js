@@ -47,7 +47,7 @@ export default function LoginPage() {
             </svg>
           </div>
           <h1 className={styles.title}>Family Expenses</h1>
-          <p className={styles.subtitle}>Gestión de finanzas familiares</p>
+          <p className={styles.subtitle}>Gestión de finanzas familiares de la familia Galván Gutiérrez</p>
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>

@@ -12,14 +12,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Family Expenses - Gestión de Finanzas Familiares",
+  title: "Family Expenses - Gestión de Finanzas Familiares de la familia",
   description: "Aplicación para gestionar los gastos familiares de forma segura y sencilla",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
         {children}
       </body>
     </html>

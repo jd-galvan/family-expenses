@@ -51,6 +51,26 @@
   gap: 1.5rem;
 }
 
+.navButton {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: none;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  color: #374151;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.navButton:hover {
+  border-color: #667eea;
+  color: #667eea;
+  background: #f5f3ff;
+}
+
 .logoutButton {
   display: flex;
   align-items: center;
@@ -255,9 +275,15 @@
 
 .categoryItem {
   display: grid;
-  grid-template-columns: 150px 1fr 100px;
+  grid-template-columns: 1fr auto 120px;
   align-items: center;
   gap: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.categoryItem:last-child {
+  border-bottom: none;
 }
 
 .categoryInfo {
@@ -295,6 +321,24 @@
   font-weight: 600;
   color: #1a1a2e;
   text-align: right;
+}
+
+.txDesc {
+  font-size: 0.8125rem;
+  color: #6b7280;
+}
+
+.txDate {
+  font-size: 0.8125rem;
+  color: #9ca3af;
+  white-space: nowrap;
+}
+
+.emptyChart {
+  text-align: center;
+  color: #9ca3af;
+  font-size: 0.9375rem;
+  padding: 3rem 0;
 }
 
 /* Dark mode support */
