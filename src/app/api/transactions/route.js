@@ -19,7 +19,7 @@ export async function GET(request) {
     })
     .from(transactions)
     .leftJoin(categories, eq(transactions.categoryId, categories.id))
-    .orderBy(desc(transactions.createdAt));
+    .orderBy(desc(transactions.date), desc(transactions.createdAt));
 
   if (month) {
     const [year, m] = month.split("-").map(Number);
