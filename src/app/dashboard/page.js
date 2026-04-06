@@ -15,15 +15,20 @@ const COLORS = [
 ];
 
 function buildMonthOptions() {
-  return Array.from({ length: 6 }, (_, i) => {
-    const d = new Date();
-    d.setDate(1);
-    d.setMonth(d.getMonth() - i);
-    const value = d.toISOString().slice(0, 7);
-    const label = d.toLocaleDateString("es-MX", { month: "long", year: "numeric" });
-    return { value, label: label.charAt(0).toUpperCase() + label.slice(1) };
-  });
+  const startDate = new Date(2026, 3, 1); // Abril 2026
+  const options = [];
+  const current = new Date();
+  current.setDate(1);
+  while (current >= startDate) {
+    const value = current.toISOString().slice(0, 7);
+    const label = current.toLocaleDateString("es-MX", { month: "long", year: "numeric" });
+    options.push({ value, label: label.charAt(0).toUpperCase() + label.slice(1) });
+    current.setMonth(current.getMonth() - 1);
+  }
+  return options;
 }
+
+const FIRST_MONTH = "2026-04"; // Mes en que se inicia el uso de la app
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -34,6 +39,10 @@ export default function DashboardPage() {
   const [monthlyTotals, setMonthlyTotals] = useState([]);
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [initialBalance, setInitialBalance] = useState(null);
+  const [showBalanceModal, setShowBalanceModal] = useState(false);
+  const [balanceInput, setBalanceInput] = useState("");
+  const [savingBalance, setSavingBalance] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -56,7 +65,51 @@ export default function DashboardPage() {
         egresos:  allMonths[i].filter((t) => t.type === "expense").reduce((s, t) => s + parseFloat(t.amount), 0),
       })).reverse()
     );
+    await loadOrCreateBalance(monthOptions[0].value);
     setLoading(false);
+  }
+
+  async function loadOrCreateBalance(month) {
+    const res = await fetch(`/api/balances?month=${month}`);
+    const data = await res.json();
+
+    if (data) {
+      setInitialBalance(parseFloat(data.initialBalance));
+      return;
+    }
+
+    // No existe saldo para este mes
+    if (month === FIRST_MONTH) {
+      // Primer mes: pedir manualmente
+      setShowBalanceModal(true);
+    } else {
+      // Mes posterior: calcular automáticamente
+      const putRes = await fetch("/api/balances", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ month }),
+      });
+      if (putRes.ok) {
+        const created = await putRes.json();
+        setInitialBalance(parseFloat(created.initialBalance));
+      }
+    }
+  }
+
+  async function handleSaveBalance() {
+    const value = parseFloat(balanceInput);
+    if (isNaN(value)) return;
+    setSavingBalance(true);
+    const res = await fetch("/api/balances", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ month: FIRST_MONTH, initialBalance: value }),
+    });
+    if (res.ok) {
+      setInitialBalance(value);
+      setShowBalanceModal(false);
+    }
+    setSavingBalance(false);
   }
 
   async function handleMonthChange(month) {
@@ -64,6 +117,15 @@ export default function DashboardPage() {
     setLoading(true);
     const data = await fetch(`/api/transactions?month=${month}`).then((r) => r.json());
     setTransactions(data);
+
+    const balRes = await fetch(`/api/balances?month=${month}`);
+    const balData = await balRes.json();
+    if (balData) {
+      setInitialBalance(parseFloat(balData.initialBalance));
+    } else {
+      setInitialBalance(null);
+    }
+
     setLoading(false);
   }
 
@@ -71,8 +133,8 @@ export default function DashboardPage() {
   const expenses = transactions.filter((t) => t.type === "expense");
   const totalIngresos = incomes.reduce((s, t) => s + parseFloat(t.amount), 0);
   const totalGastos   = expenses.reduce((s, t) => s + parseFloat(t.amount), 0);
-  const balance       = totalIngresos - totalGastos;
-  const savingsPct    = totalIngresos > 0 ? (balance / totalIngresos) * 100 : 0;
+  const balance       = (initialBalance ?? 0) + totalIngresos - totalGastos;
+  const savingsPct    = totalIngresos > 0 ? ((totalIngresos - totalGastos) / totalIngresos) * 100 : 0;
 
   const expenseByCategory = Object.values(
     expenses.reduce((acc, t) => {
@@ -85,6 +147,34 @@ export default function DashboardPage() {
 
   return (
     <div className={styles.container}>
+      {showBalanceModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal}>
+            <h2 className={styles.modalTitle}>Saldo inicial</h2>
+            <p className={styles.modalDesc}>
+              Ingresa el saldo con el que comienzas a registrar tus finanzas en Abril 2026.
+            </p>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+              value={balanceInput}
+              onChange={(e) => setBalanceInput(e.target.value)}
+              className={styles.modalInput}
+              autoFocus
+            />
+            <button
+              onClick={handleSaveBalance}
+              disabled={savingBalance || balanceInput === ""}
+              className={styles.modalButton}
+            >
+              {savingBalance ? "Guardando..." : "Guardar"}
+            </button>
+          </div>
+        </div>
+      )}
+
       <header className={styles.header}>
         <div className={styles.headerLeft}>
           <div className={styles.logo}>
@@ -131,6 +221,21 @@ export default function DashboardPage() {
         </section>
 
         <section className={styles.summaryCards}>
+          <div className={`${styles.card} ${styles.startingCard}`}>
+            <div className={styles.cardIcon}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+            </div>
+            <div className={styles.cardContent}>
+              <span className={styles.cardLabel}>Saldo inicial</span>
+              <span className={styles.cardValue}>
+                {initialBalance !== null ? fmt(initialBalance) : "—"}
+              </span>
+            </div>
+          </div>
+
           <div className={`${styles.card} ${styles.incomeCard}`}>
             <div className={styles.cardIcon}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

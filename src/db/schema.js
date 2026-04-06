@@ -17,3 +17,12 @@ export const transactions = pgTable("transactions", {
   date: timestamp("date").notNull().defaultNow(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
+
+// Saldo inicial por mes. Solo Abril 2026 se ingresa manualmente;
+// los meses siguientes se calculan automáticamente al cargar el dashboard.
+export const monthlyBalances = pgTable("monthly_balances", {
+  id: serial("id").primaryKey(),
+  month: text("month").notNull().unique(), // formato "YYYY-MM"
+  initialBalance: numeric("initial_balance", { precision: 12, scale: 2 }).notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});

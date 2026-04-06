@@ -88,15 +88,20 @@ export default function TransactionsPage() {
 
   const total = filteredTransactions.reduce((sum, t) => sum + parseFloat(t.amount), 0);
 
-  // Genera los últimos 12 meses para el selector
-  const monthOptions = Array.from({ length: 12 }, (_, i) => {
-    const d = new Date();
-    d.setDate(1);
-    d.setMonth(d.getMonth() - i);
-    const value = d.toISOString().slice(0, 7);
-    const label = d.toLocaleDateString("es-MX", { month: "long", year: "numeric" });
-    return { value, label: label.charAt(0).toUpperCase() + label.slice(1) };
-  });
+  // Genera meses desde Abril 2026 hasta el mes actual
+  const monthOptions = (() => {
+    const startDate = new Date(2026, 3, 1); // Abril 2026
+    const options = [];
+    const current = new Date();
+    current.setDate(1);
+    while (current >= startDate) {
+      const value = current.toISOString().slice(0, 7);
+      const label = current.toLocaleDateString("es-MX", { month: "long", year: "numeric" });
+      options.push({ value, label: label.charAt(0).toUpperCase() + label.slice(1) });
+      current.setMonth(current.getMonth() - 1);
+    }
+    return options;
+  })();
 
   return (
     <div className={styles.container}>
