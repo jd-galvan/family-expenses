@@ -294,14 +294,11 @@ export default function DashboardPage() {
                       formatter={(v, name, props) => [fmt(v), props.payload.name]}
                       contentStyle={{ borderRadius: "10px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
                     />
-                    <Bar dataKey="value" radius={[4, 4, 0, 0]}
-                      fill="#43e97b"
-                      label={false}
-                      isAnimationActive={true}
-                      cells={monthlyTotals.map((entry, i) => (
+                    <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                      {monthlyTotals.map((_entry, i) => (
                         <Cell key={i} fill={i === 0 ? "#43e97b" : "#f5576c"} />
                       ))}
-                    />
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </div>
