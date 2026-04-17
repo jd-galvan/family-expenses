@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  ResponsiveContainer, PieChart, Pie, Cell,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell,
+  ResponsiveContainer, PieChart, Pie,
 } from "recharts";
 import styles from "./dashboard.module.css";
 import { useCurrency } from "@/lib/useCurrency";
@@ -20,7 +20,7 @@ function buildMonthOptions() {
   const current = new Date();
   current.setDate(1);
   while (current >= startDate) {
-    const value = current.toISOString().slice(0, 7);
+    const value = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, "0")}`;
     const label = current.toLocaleDateString("es-MX", { month: "long", year: "numeric" });
     options.push({ value, label: label.charAt(0).toUpperCase() + label.slice(1) });
     current.setMonth(current.getMonth() - 1);
@@ -46,26 +46,26 @@ export default function DashboardPage() {
 
   useEffect(() => {
     setMounted(true);
-    loadAll();
+    loadAll(monthOptions[0].value);
   }, []);
 
-  async function loadAll() {
+  async function loadAll(month) {
     setLoading(true);
-    const [current, ...prev] = await Promise.all(
-      monthOptions.map((o) =>
-        fetch(`/api/transactions?month=${o.value}`).then((r) => r.json())
-      )
-    );
-    setTransactions(current);
-    const allMonths = [current, ...prev];
-    setMonthlyTotals(
-      monthOptions.map((o, i) => ({
-        month: o.value.slice(5),
-        ingresos: allMonths[i].filter((t) => t.type === "income").reduce((s, t) => s + parseFloat(t.amount), 0),
-        egresos:  allMonths[i].filter((t) => t.type === "expense").reduce((s, t) => s + parseFloat(t.amount), 0),
-      })).reverse()
-    );
-    await loadOrCreateBalance(monthOptions[0].value);
+    const [txs] = await Promise.all([
+      fetch(`/api/transactions?month=${month}`).then((r) => r.json()),
+      loadOrCreateBalance(month),
+    ]);
+    setTransactions(txs);
+    setMonthlyTotals([
+      {
+        name: "Ingresos",
+        value: txs.filter((t) => t.type === "income").reduce((s, t) => s + parseFloat(t.amount), 0),
+      },
+      {
+        name: "Egresos",
+        value: txs.filter((t) => t.type === "expense").reduce((s, t) => s + parseFloat(t.amount), 0),
+      },
+    ]);
     setLoading(false);
   }
 
@@ -114,19 +114,7 @@ export default function DashboardPage() {
 
   async function handleMonthChange(month) {
     setSelectedMonth(month);
-    setLoading(true);
-    const data = await fetch(`/api/transactions?month=${month}`).then((r) => r.json());
-    setTransactions(data);
-
-    const balRes = await fetch(`/api/balances?month=${month}`);
-    const balData = await balRes.json();
-    if (balData) {
-      setInitialBalance(parseFloat(balData.initialBalance));
-    } else {
-      setInitialBalance(null);
-    }
-
-    setLoading(false);
+    await loadAll(month);
   }
 
   const incomes  = transactions.filter((t) => t.type === "income");
@@ -295,20 +283,25 @@ export default function DashboardPage() {
         {mounted && (
           <section className={styles.chartsGrid}>
             <div className={styles.chartCard}>
-              <h3 className={styles.chartTitle}>Ingresos vs Egresos (6 meses)</h3>
+              <h3 className={styles.chartTitle}>Ingresos vs Egresos</h3>
               <div className={styles.chartContainer}>
                 <ResponsiveContainer width="100%" height={280}>
                   <BarChart data={monthlyTotals}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis dataKey="month" stroke="#6b7280" />
+                    <XAxis dataKey="name" stroke="#6b7280" />
                     <YAxis stroke="#6b7280" />
                     <Tooltip
-                      formatter={(v) => fmt(v)}
+                      formatter={(v, name, props) => [fmt(v), props.payload.name]}
                       contentStyle={{ borderRadius: "10px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
                     />
-                    <Legend />
-                    <Bar dataKey="ingresos" fill="#43e97b" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="egresos"  fill="#f5576c" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="value" radius={[4, 4, 0, 0]}
+                      fill="#43e97b"
+                      label={false}
+                      isAnimationActive={true}
+                      cells={monthlyTotals.map((entry, i) => (
+                        <Cell key={i} fill={i === 0 ? "#43e97b" : "#f5576c"} />
+                      ))}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
