@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { transactions, categories } from "@/db/schema";
-import { eq, and, gte, lte, desc } from "drizzle-orm";
+import { eq, and, gte, lt, desc } from "drizzle-orm";
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -25,7 +25,7 @@ export async function GET(request) {
     const [year, m] = month.split("-").map(Number);
     const from = new Date(year, m - 1, 1);
     const to = new Date(year, m, 1);
-    query = query.where(and(gte(transactions.date, from), lte(transactions.date, to)));
+    query = query.where(and(gte(transactions.date, from), lt(transactions.date, to)));
   }
 
   const data = await query;
