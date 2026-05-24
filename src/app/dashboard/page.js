@@ -14,6 +14,18 @@ const COLORS = [
   "#4facfe", "#43e97b", "#fa8231", "#a29bfe",
 ];
 
+function getPrevMonths(month, count) {
+  const [year, m] = month.split("-").map(Number);
+  const months = [];
+  for (let i = count; i >= 0; i--) {
+    const d = new Date(year, m - 1 - i, 1);
+    const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const label = d.toLocaleDateString("es-MX", { month: "short" });
+    months.push({ value, label: label.charAt(0).toUpperCase() + label.slice(1) });
+  }
+  return months;
+}
+
 function buildMonthOptions() {
   const startDate = new Date(2026, 3, 1); // Abril 2026
   const options = [];
@@ -49,21 +61,20 @@ export default function DashboardPage() {
   }, []);
 
   async function loadAll(month) {
-    const [txs] = await Promise.all([
-      fetch(`/api/transactions?month=${month}`).then((r) => r.json()),
+    const months = getPrevMonths(month, 2);
+    const [results] = await Promise.all([
+      Promise.all(months.map((m) => fetch(`/api/transactions?month=${m.value}`).then((r) => r.json()))),
       loadOrCreateBalance(month),
     ]);
-    setTransactions(txs);
-    setMonthlyTotals([
-      {
-        name: "Ingresos",
-        value: txs.filter((t) => t.type === "income").reduce((s, t) => s + parseFloat(t.amount), 0),
-      },
-      {
-        name: "Egresos",
-        value: txs.filter((t) => t.type === "expense").reduce((s, t) => s + parseFloat(t.amount), 0),
-      },
-    ]);
+    const currentTxs = results[results.length - 1];
+    setTransactions(currentTxs);
+    setMonthlyTotals(
+      months.map((m, i) => ({
+        name: m.label,
+        ingresos: results[i].filter((t) => t.type === "income").reduce((s, t) => s + parseFloat(t.amount), 0),
+        egresos: results[i].filter((t) => t.type === "expense").reduce((s, t) => s + parseFloat(t.amount), 0),
+      }))
+    );
   }
 
   async function loadOrCreateBalance(month) {
@@ -266,22 +277,20 @@ export default function DashboardPage() {
         {mounted && (
           <section className={styles.chartsGrid}>
             <div className={styles.chartCard}>
-              <h3 className={styles.chartTitle}>Ingresos vs Egresos</h3>
+              <h3 className={styles.chartTitle}>Ingresos vs Egresos (últimos 3 meses)</h3>
               <div className={styles.chartContainer}>
                 <ResponsiveContainer width="100%" height={280}>
-                  <BarChart data={monthlyTotals}>
+                  <BarChart data={monthlyTotals} barCategoryGap="30%" barGap={4}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                     <XAxis dataKey="name" stroke="#6b7280" />
                     <YAxis stroke="#6b7280" />
                     <Tooltip
-                      formatter={(v, name, props) => [fmt(v), props.payload.name]}
+                      formatter={(v, name) => [fmt(v), name.charAt(0).toUpperCase() + name.slice(1)]}
                       contentStyle={{ borderRadius: "10px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
                     />
-                    <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                      {monthlyTotals.map((_entry, i) => (
-                        <Cell key={i} fill={i === 0 ? "#43e97b" : "#f5576c"} />
-                      ))}
-                    </Bar>
+                    <Legend />
+                    <Bar dataKey="ingresos" fill="#43e97b" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="egresos" fill="#f5576c" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
