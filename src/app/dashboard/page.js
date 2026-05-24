@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell,
   ResponsiveContainer, PieChart, Pie,
 } from "recharts";
 import styles from "./dashboard.module.css";
@@ -38,7 +38,6 @@ export default function DashboardPage() {
   const [transactions, setTransactions] = useState([]);
   const [monthlyTotals, setMonthlyTotals] = useState([]);
   const [mounted, setMounted] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [initialBalance, setInitialBalance] = useState(null);
   const [showBalanceModal, setShowBalanceModal] = useState(false);
   const [balanceInput, setBalanceInput] = useState("");
@@ -50,7 +49,6 @@ export default function DashboardPage() {
   }, []);
 
   async function loadAll(month) {
-    setLoading(true);
     const [txs] = await Promise.all([
       fetch(`/api/transactions?month=${month}`).then((r) => r.json()),
       loadOrCreateBalance(month),
@@ -66,7 +64,6 @@ export default function DashboardPage() {
         value: txs.filter((t) => t.type === "expense").reduce((s, t) => s + parseFloat(t.amount), 0),
       },
     ]);
-    setLoading(false);
   }
 
   async function loadOrCreateBalance(month) {
@@ -122,7 +119,6 @@ export default function DashboardPage() {
   const totalIngresos = incomes.reduce((s, t) => s + parseFloat(t.amount), 0);
   const totalGastos   = expenses.reduce((s, t) => s + parseFloat(t.amount), 0);
   const balance       = (initialBalance ?? 0) + totalIngresos - totalGastos;
-  const savingsPct    = totalIngresos > 0 ? ((totalIngresos - totalGastos) / totalIngresos) * 100 : 0;
 
   const expenseByCategory = Object.values(
     expenses.reduce((acc, t) => {
@@ -265,19 +261,6 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className={`${styles.card} ${styles.savingsCard}`}>
-            <div className={styles.cardIcon}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h2v-4h-2c0-1-.5-1.5-1-2V5z" />
-                <path d="M2 9v1c0 1.1.9 2 2 2h1" />
-                <circle cx="16" cy="11" r="1" />
-              </svg>
-            </div>
-            <div className={styles.cardContent}>
-              <span className={styles.cardLabel}>Ahorro</span>
-              <span className={styles.cardValue}>{savingsPct.toFixed(1)}%</span>
-            </div>
-          </div>
         </section>
 
         {mounted && (
@@ -337,34 +320,6 @@ export default function DashboardPage() {
           </section>
         )}
 
-        <section className={styles.categoryBreakdown}>
-          <h3 className={styles.sectionTitle}>Últimas transacciones</h3>
-          {loading ? (
-            <p className={styles.emptyChart}>Cargando...</p>
-          ) : transactions.length === 0 ? (
-            <p className={styles.emptyChart}>Sin transacciones este mes.</p>
-          ) : (
-            <div className={styles.categoryList}>
-              {transactions.slice(0, 10).map((t) => (
-                <div key={t.id} className={styles.categoryItem}>
-                  <div className={styles.categoryInfo}>
-                    <div className={styles.categoryDot} style={{ backgroundColor: t.type === "income" ? "#43e97b" : "#f5576c" }} />
-                    <div>
-                      <span className={styles.categoryName}>{t.categoryName}</span>
-                      {t.description && <span className={styles.txDesc}> · {t.description}</span>}
-                    </div>
-                  </div>
-                  <span className={styles.txDate}>
-                    {new Date(t.date).toLocaleDateString("es-MX", { day: "numeric", month: "short" })}
-                  </span>
-                  <span className={`${styles.categoryValue} ${t.type === "income" ? styles.positive : styles.negative}`}>
-                    {t.type === "income" ? "+" : "-"}{fmt(parseFloat(t.amount))}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
       </main>
     </div>
   );
