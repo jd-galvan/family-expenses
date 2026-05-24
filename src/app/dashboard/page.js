@@ -297,7 +297,7 @@ export default function DashboardPage() {
             </div>
 
             <div className={styles.chartCard}>
-              <h3 className={styles.chartTitle}>Egresos por categoría</h3>
+              <h3 className={styles.chartTitle}>Egresos por categoría ({monthOptions.find((o) => o.value === selectedMonth)?.label})</h3>
               {expenseByCategory.length === 0 ? (
                 <p className={styles.emptyChart}>Sin egresos registrados este mes.</p>
               ) : (
