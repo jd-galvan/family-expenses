@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { monthlyBalances, transactions } from "@/db/schema";
-import { eq, and, gte, lte } from "drizzle-orm";
+import { eq, and, gte, lt } from "drizzle-orm";
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -67,7 +67,7 @@ export async function PUT(request) {
   const prevTransactions = await db
     .select()
     .from(transactions)
-    .where(and(gte(transactions.date, from), lte(transactions.date, to)));
+    .where(and(gte(transactions.date, from), lt(transactions.date, to)));
 
   const ingresos = prevTransactions
     .filter((t) => t.type === "income")
