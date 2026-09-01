@@ -16,6 +16,11 @@ export const metadata = {
   description: "Aplicación para gestionar los gastos familiares de forma segura y sencilla",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en">

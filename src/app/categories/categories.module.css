@@ -43,6 +43,8 @@
   font-size: 1.25rem;
   font-weight: 700;
   color: #111827;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .main {
@@ -93,6 +95,7 @@
 
 .input {
   flex: 1;
+  min-width: 0;
   padding: 0.75rem 1rem;
   border: 2px solid #e5e7eb;
   border-radius: 10px;
@@ -152,7 +155,7 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(160px, 100%), 1fr));
   gap: 0.75rem;
 }
 
@@ -187,6 +190,8 @@
   font-size: 0.9375rem;
   font-weight: 500;
   color: #111827;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .deleteButton {
@@ -218,6 +223,10 @@
 }
 
 @media (max-width: 480px) {
+  .header {
+    padding: 0.875rem 1rem;
+  }
+
   .main {
     padding: 1.25rem 1rem;
   }

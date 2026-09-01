@@ -1,5 +1,6 @@
 .container {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -175,6 +176,10 @@
 }
 
 @media (max-width: 480px) {
+  .container {
+    padding: 0.75rem;
+  }
+
   .loginCard {
     padding: 2rem 1.5rem;
     border-radius: 20px;

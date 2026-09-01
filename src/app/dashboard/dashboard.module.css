@@ -20,6 +20,7 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  min-width: 0;
 }
 
 .logo {
@@ -31,6 +32,7 @@
   align-items: center;
   justify-content: center;
   color: white;
+  flex-shrink: 0;
 }
 
 .logo svg {
@@ -43,11 +45,15 @@
   font-weight: 700;
   color: #1a1a2e;
   letter-spacing: -0.5px;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .headerRight {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 1.5rem;
 }
 
@@ -98,7 +104,7 @@
 
 /* Main Content */
 .main {
-  padding: 2rem;
+  padding: clamp(1rem, 3vw, 2rem);
   max-width: 1400px;
   margin: 0 auto;
 }
@@ -109,6 +115,7 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
+  gap: 1rem;
 }
 
 .welcomeTitle {
@@ -132,6 +139,7 @@
   background: white;
   cursor: pointer;
   transition: all 0.2s ease;
+  max-width: 100%;
 }
 
 .monthSelector:focus {
@@ -156,6 +164,7 @@
   gap: 1rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  min-width: 0;
 }
 
 .card:hover {
@@ -170,6 +179,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .cardIcon svg {
@@ -200,6 +210,7 @@
 .cardContent {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .cardLabel {
@@ -209,9 +220,10 @@
 }
 
 .cardValue {
-  font-size: 1.5rem;
+  font-size: clamp(1.125rem, 2.5vw, 1.5rem);
   font-weight: 700;
   color: #1a1a2e;
+  overflow-wrap: anywhere;
 }
 
 .cardValue.positive {
@@ -235,6 +247,7 @@
   border-radius: 16px;
   padding: 1.5rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  min-width: 0;
 }
 
 .chartCard.fullWidth {
@@ -275,7 +288,7 @@
 
 .categoryItem {
   display: grid;
-  grid-template-columns: 1fr auto 120px;
+  grid-template-columns: minmax(0, 1fr) auto minmax(90px, 120px);
   align-items: center;
   gap: 1rem;
   padding: 0.5rem 0;
@@ -290,6 +303,7 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  min-width: 0;
 }
 
 .categoryDot {
@@ -301,6 +315,7 @@
 .categoryName {
   font-size: 0.95rem;
   color: #374151;
+  overflow-wrap: anywhere;
 }
 
 .categoryBar {
@@ -350,6 +365,7 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  padding: 1rem;
 }
 
 .modal {
@@ -362,6 +378,8 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
 }
 
 .modalTitle {
@@ -496,14 +514,50 @@
     gap: 1rem;
   }
 
+  .welcomeSection .monthSelector {
+    width: 100%;
+  }
+
   .summaryCards {
     grid-template-columns: 1fr;
   }
 
   .categoryItem {
-    grid-template-columns: 120px 1fr 80px;
+    grid-template-columns: minmax(0, 120px) minmax(56px, 1fr) auto;
   }
 
+}
+
+@media (max-width: 640px) {
+  .header {
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  .headerLeft,
+  .headerRight {
+    width: 100%;
+  }
+
+  .headerRight {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .navButton,
+  .logoutButton {
+    justify-content: center;
+  }
+
+  .logoutButton {
+    grid-column: 1 / -1;
+  }
+
+  .chartCard,
+  .categoryBreakdown {
+    padding: 1rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -516,15 +570,25 @@
   }
 
   .categoryItem {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) auto;
     gap: 0.5rem;
   }
 
   .categoryInfo {
-    justify-content: space-between;
+    grid-column: 1 / -1;
+  }
+
+  .categoryBar {
+    grid-column: 1;
   }
 
   .categoryValue {
-    text-align: left;
+    grid-column: 2;
+    text-align: right;
+  }
+
+  .modal {
+    border-radius: 16px;
+    padding: 1.5rem;
   }
 }
